@@ -19,19 +19,20 @@ pool
 pool
 	.query(
 		`
-SELECT students.id as student_id, students.name as student_name, cohorts.name as cohort
-FROM students
-JOIN cohorts ON students.cohort_id = cohorts.id
-WHERE cohorts.name LIKE $1
-LIMIT $2;
+    SELECT DISTINCT teachers.name as name, cohorts.name as cohort
+    FROM teachers
+    JOIN assistance_requests ON teachers.id = assistance_requests.teacher_id
+    JOIN students ON assistance_requests.student_id = students.id
+    JOIN cohorts ON students.cohort_id = cohorts.id
+    WHERE assistance_requests.teacher_id IS NOT NULL 
+    AND cohorts.name = $1
+    ORDER BY name;
 `,
-		[`%${args[0]}%`, args[1]]
+		[args[0]]
 	)
 	.then((res) => {
 		res.rows.forEach((user) => {
-			console.log(
-				`${user.student_name} has an id of ${user.student_id} and was in the ${user.cohort} cohort`
-			);
+			console.log(`${user.cohort}: ${user.name}`);
 		});
 	})
 	.catch((err) => console.error('query error', err.stack));
